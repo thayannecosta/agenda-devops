@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; }
+        form { display: flex; flex-direction: column; margin-bottom: 20px; }
+        input, button { margin: 5px 0; padding: 5px; }
+        ul { list-style-type: none; padding: 0; }
+        li { background-color: #f0f0f0; margin: 5px 0; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Minha Agenda</h1>
+    <form id="eventForm">
+        <input type="text" id="title" placeholder="Título do evento" required>
+        <input type="date" id="date" required>
+        <button type="submit">Adicionar Evento</button>
+    </form>
+    <ul id="eventList"></ul>
+
+    <script>
+        const API_URL = 'http://localhost:8000'; // Ajuste conforme necessário
+
+        async function fetchEvents() {
+            const response = await fetch(API_URL);
+            const events = await response.json();
+            const eventList = document.getElementById('eventList');
+            eventList.innerHTML = '';
+            events.forEach(event => {
+                const li = document.createElement('li');
+                li.textContent = `${event.title} - ${event.date}`;
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Excluir';
+                deleteButton.onclick = () => deleteEvent(event.id);
+                li.appendChild(deleteButton);
+                eventList.appendChild(li);
+            });
+        }
+
+        async function addEvent(event) {
+            event.preventDefault();
+            const title = document.getElementById('title').value;
+            const date = document.getElementById('date').value;
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, date })
+            });
+            document.getElementById('eventForm').reset();
+            fetchEvents();
+        }
+
+        async function deleteEvent(id) {
+            await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
+            fetchEvents();
+        }
+
+        document.getElementById('eventForm').addEventListener('submit', addEvent);
+        fetchEvents();
+    </script>
+</body>
+</html>
